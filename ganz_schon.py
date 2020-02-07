@@ -1,5 +1,4 @@
 import numpy as np
-#BONUSREGISTER
 class GameSheet(object):
 
     def __init__(self):
@@ -15,18 +14,17 @@ class GameSheet(object):
                                    }
 
 
-        self.blue = np.zeros((3, 4))
+        self.blue = np.zeros((3, 4),dtype=int)
         self.blue[0, 0] = 1
-        self.green_pos = 0 # np.zeros(11, dtype=int)
-        self.orange_pos = 0
+        self.green_pos = - 1 #changed to -1 so position = x means x is last crossed.
+        self.orange_pos = - 1
         self.orange_sum = 0
-        self.purple_pos = 0
+        self.purple_pos = - 1
         self.purple_sum = 0
-
+        self.green_orange_purple_bonus = np.array([[ - 1, - 1, - 1, - 1, - 1,1,5, - 1,4, - 1, - 1],[ - 1, - 1, - 1, - 1,0, - 1, - 1,5, - 1,4, - 1],[ - 1, - 1, - 1,1, -1,0,5, - 1,2,3, - 1]],dtype=int)
         self.choice = None
         self.last_mark = None
         self.yellow_side = None
-
         self.no_fox = 0
 
 
@@ -61,6 +59,7 @@ class GameSheet(object):
 
         return self.choice
 
+
     def MarkSheet(self, color=None, value=None, yellow_side=None):
 
         if color is None:
@@ -93,18 +92,23 @@ class GameSheet(object):
             print('row col', row, col)
             self.blue[row:row+1, col:col+1] = 1
             print(self.blue)
+            self.CheckBlueBonuses(row=row,col=col)
 
         if color == 2: # GREEN
             print('GREEN')
             self.green_pos += 1
+            self.CheckGreenOrangePurpleBonuses(color,self.green_pos)
 
         if color == 3:  # ORANGE
             self.orange_pos += 1
             self.orange_sum += value
+            self.CheckGreenOrangePurpleBonuses(color,self.orange_pos)
 
         if color == 4:  # purple
             self.purple_pos += 1
             self.purple_sum += value
+            self.CheckGreenOrangePurpleBonuses(color,self.purple_pos)
+
 
     def CheckYellowBonuses(self, row, col):
 
@@ -146,9 +150,29 @@ class GameSheet(object):
 
     def CheckBlueBonuses(self, row, col):
         if np.all(self.blue[row, :] == 1):
-            BlueBonusRows(row, col)
+            self.BlueBonusRows(row, col)
         if np.all(self.blue[:, col] == 1):
-            BlueBonusCols(row, col)
+            self.BlueBonusCols(row, col)
+
+#Green Orange and Purple have similar bonus structure, so check is done together:
+
+    def CheckGreenOrangePurpleBonuses(self,color,position):
+        row = color - 2
+        bonus = self.green_orange_purple_bonus[row,position]
+        if bonus == 0:
+            #TODO: choose yellow
+            pass
+        if bonus == 1:
+            #todo: Choose blue
+            pass
+        if bonus == 2:
+            self.MarkSheet(color=2, value=6)
+        if bonus == 3:
+            self.MarkSheet(color=3, value=5) # 5 is not a typo
+        if bonus == 4:
+            self.MarkSheet(color=4, value=6)
+
+
 
 
 
@@ -162,7 +186,7 @@ if __name__ == '__main__':
     #print(gs.purple)
 
     for i in range(0, 3):
-        print('-'*20, 'Så rulles slag nr. ', i+1)
+        print('-'*20, 'Saa rulles slag nr. ', i+1)
         if np.any(gs.dice_active > 0):
             gs.OneRoll()
             #
