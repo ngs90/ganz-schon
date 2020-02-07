@@ -1,5 +1,5 @@
 import numpy as np
-
+#BONUSREGISTER
 class GameSheet(object):
 
     def __init__(self):
