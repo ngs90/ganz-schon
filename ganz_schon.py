@@ -17,7 +17,6 @@ class GameSheet(object):
 
         self.blue = np.zeros((3, 4))
         self.blue[0, 0] = 1
-
         self.green_pos = 0 # np.zeros(11, dtype=int)
         self.orange_pos = 0
         self.orange_sum = 0
@@ -89,7 +88,8 @@ class GameSheet(object):
 
             # Placement
             row = (value - 1) // self.blue.shape[1]
-            col = (value - 1) % self.blue.shape[1]
+            col = (value
+             - 1) % self.blue.shape[1]
             print('row col', row, col)
             self.blue[row:row+1, col:col+1] = 1
             print(self.blue)
@@ -111,13 +111,45 @@ class GameSheet(object):
         if np.all(self.yellow[row, :] == 1):
             if row == 0:
                 pass
-                # make a choice
+                # TODO: make a choice
             elif row == 1:
                 self.MarkSheet(color=3, value=4) # add orange 4
             elif row == 2:
                 self.MarkSheet(color=2, value=6) # add green (cross, value is irrelevant)
             elif row == 3:
                 self.no_fox += 1
+
+#Blue Bonusses. Two help-methods "BlueBonusRows", "BlueBonusCols" to simplify "CheckBlueBonuses"
+    def BlueBonusRows(self, row, col):
+        if np.all(self.blue[row, :] == 1):
+            if row == 0:
+                self.MarkSheet(color=3, value=5)
+            elif row == 1:
+                # TODO: make a choice
+                pass
+            elif row == 2:
+                pass
+                #TODO: add +1
+
+    def BlueBonusCols(self, row, col):
+        if np.all(self.blue[:, col] == 1):
+            if row == 0:
+                pass
+                # TODO: reroll
+            elif row == 1:
+                self.MarkSheet(color=2, value=6)
+            elif row == 2:
+                self.MarkSheet(color=4, value=6)
+            elif row == 3:
+                self.no_fox += 1
+
+
+    def CheckBlueBonuses(self, row, col):
+        if np.all(self.blue[row, :] == 1):
+            BlueBonusRows(row, col)
+        if np.all(self.blue[:, col] == 1):
+            BlueBonusCols(row, col)
+
 
 
 if __name__ == '__main__':
@@ -135,8 +167,3 @@ if __name__ == '__main__':
             gs.OneRoll()
             #
             gs.MarkSheet()
-
-
-
-
-
