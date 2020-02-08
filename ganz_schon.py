@@ -38,7 +38,7 @@ class GameSheet(object):
         self.dice[self.dice_active > 0] = np.random.choice(6, np.sum(self.dice_active[self.dice_active > 0])) + 1
         return self.dice
 
-    def OneRoll(self):
+    def ActiveRoll(self):
         dice_values = self.Roll()
         #active_dice_values = dice_values[self.dice_active]
 
@@ -52,13 +52,28 @@ class GameSheet(object):
 
         self.dice_active[self.dice_active > 0] = np.where(self.choice > dice_values, 0, self.dice_active)[self.dice_active > 0]
         self.dice_active[self.index_choice] = -1
-
         active = self.dice[self.dice_active > 0]
 
         print('Dice values', dice_values, 'Active dice values', active, 'Dice_active_index', self.dice_active)
 
         return self.choice
 
+    def PassiveRoll(self): #rules: Only 1 roll w/ 6 dice. Choose 1 among the 3 smallest dice.
+        self.dice_values = self.Roll()
+        small_dice = np.partition(self.dice_values, 3)[:3] #takes the 3 smallest dice
+        max = small_dice.max()
+#        print(self.dice_values,small_dice,max)
+        self.dice_active[self.dice_values>max] = 0
+        no_strictly_smaller = sum(small_dice < max)
+        no_equal = sum(self.dice_values == max) # if there are not exactly 3 smallest dice, randomness chooses
+#        print("no_equal + no_strictly_smaller",no_equal,no_strictly_smaller,no_equal + no_strictly_smaller)
+        if no_equal + no_strictly_smaller > 3:
+            max_among_min = np.argwhere(self.dice == max).flatten()
+#            print(max_among_min)
+            indices_to_deactivate = np.random.choice(max_among_min,no_equal + no_strictly_smaller-3,replace=False)
+            self.dice_active[indices_to_deactivate] = 0
+#        print(self.dice_values,self.dice_active)
+        #TODO: Make choice
 
     def MarkSheet(self, color=None, value=None, yellow_side=None):
 
@@ -184,10 +199,10 @@ if __name__ == '__main__':
     #print(gs.green)
     #print(gs.orange)
     #print(gs.purple)
-
-    for i in range(0, 3):
-        print('-'*20, 'Saa rulles slag nr. ', i+1)
-        if np.any(gs.dice_active > 0):
-            gs.OneRoll()
-            #
-            gs.MarkSheet()
+    gs.PassiveRoll()
+    # for i in range(0, 3):
+    #     print('-'*20, 'Saa rulles slag nr. ', i+1)
+    #     if np.any(gs.dice_active > 0):
+    #         gs.ActiveRoll()
+    #         #
+    #         gs.MarkSheet()
