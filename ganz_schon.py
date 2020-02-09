@@ -38,11 +38,14 @@ class GameSheet(object):
         self.dice[self.dice_active > 0] = np.random.choice(6, np.sum(self.dice_active[self.dice_active > 0])) + 1
         return self.dice
 
+#TODO: substitute choicewrap into active and passive roll.
+
     def ActiveRoll(self):
         dice_values = self.Roll()
         #active_dice_values = dice_values[self.dice_active]
 
         options = np.argwhere(self.dice_active > 0).ravel()
+
         self.index_choice = np.random.choice(options)
 
         # CHOICE MUST BE MADE
@@ -72,6 +75,11 @@ class GameSheet(object):
 #            print(max_among_min)
             indices_to_deactivate = np.random.choice(max_among_min,no_equal + no_strictly_smaller-3,replace=False)
             self.dice_active[indices_to_deactivate] = 0
+
+        options = np.argwhere(self.dice_active > 0).ravel()
+        self.index_choice = np.random.choice(options)
+        # CHOICE MUST BE MADE
+        self.choice, self.yellow_side = self.dice[self.index_choice], np.random.choice([0,1],1)[0] # TODO: Implement fancy algorithm choice nice mega awesome function here
 #        print(self.dice_values,self.dice_active)
         #TODO: Make choice
 
@@ -193,16 +201,16 @@ class GameSheet(object):
 
 if __name__ == '__main__':
     gs = GameSheet()
-
     #print(gs.yellow)
     #print(gs.blue)
     #print(gs.green)
     #print(gs.orange)
     #print(gs.purple)
+    for i in range(0, 3):
+        print('-'*20, 'Saa rulles slag nr. ', i+1)
+        if np.any(gs.dice_active > 0):
+            gs.ActiveRoll()
+            gs.MarkSheet()
+    gs.dice_active = np.ones(6, dtype=int) #reset, all dice in play again.
     gs.PassiveRoll()
-    # for i in range(0, 3):
-    #     print('-'*20, 'Saa rulles slag nr. ', i+1)
-    #     if np.any(gs.dice_active > 0):
-    #         gs.ActiveRoll()
-    #         #
-    #         gs.MarkSheet()
+    gs.MarkSheet()
