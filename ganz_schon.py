@@ -40,26 +40,34 @@ class GameSheet(object):
 
 #TODO: substitute choicewrap into active and passive roll.
 
+
+
     def ActiveRoll(self):
         dice_values = self.Roll()
         #active_dice_values = dice_values[self.dice_active]
-
-        options = np.argwhere(self.dice_active > 0).ravel()
-
-        self.index_choice = np.random.choice(options)
-
-        # CHOICE MUST BE MADE
-        self.choice, self.yellow_side = self.dice[self.index_choice], np.random.choice([0,1],1)[0] # TODO: Implement fancy algorithm choice nice mega awesome function here
-
+        pre_options = np.argwhere(self.dice_active[:5] > 0).ravel()
+        if self.dice_active[5] > 0:
+            options = np.concatenate((pre_options, np.arange(50,55, dtype = int)))
+        else:
+            options = pre_options
+        self.choice_option= np.random.choice(options)  # TODO: Implement fancy algorithm choice nice mega awesome function here
+        if self.choice_option >= 50: #If color is white,
+            self.index_choice = 5
+            self.choice = self.dice[5]
+        else:
+            self.index_choice = self.choice_option
+            self.choice = self.dice[self.index_choice]
+        self.yellow_side = np.random.choice([0,1],1)[0] # TODO: Implement fancy algorithm choice nice mega awesome function here
         print('options', options, 'choice is', self.choice, 'with index', self.index_choice)
-
-        self.dice_active[self.dice_active > 0] = np.where(self.choice > dice_values, 0, self.dice_active)[self.dice_active > 0]
+        self.dice_active[ self.dice_active > 0 ] = np.where(self.choice > dice_values, 0, self.dice_active)[self.dice_active > 0]
         self.dice_active[self.index_choice] = -1
         active = self.dice[self.dice_active > 0]
-
         print('Dice values', dice_values, 'Active dice values', active, 'Dice_active_index', self.dice_active)
 
-        return self.choice
+
+
+
+
 
     def PassiveRoll(self): #rules: Only 1 roll w/ 6 dice. Choose 1 among the 3 smallest dice.
         self.dice_values = self.Roll()
@@ -76,17 +84,23 @@ class GameSheet(object):
             indices_to_deactivate = np.random.choice(max_among_min,no_equal + no_strictly_smaller-3,replace=False)
             self.dice_active[indices_to_deactivate] = 0
 
-        options = np.argwhere(self.dice_active > 0).ravel()
-        self.index_choice = np.random.choice(options)
-        # CHOICE MUST BE MADE
-        self.choice, self.yellow_side = self.dice[self.index_choice], np.random.choice([0,1],1)[0] # TODO: Implement fancy algorithm choice nice mega awesome function here
-#        print(self.dice_values,self.dice_active)
-        #TODO: Make choice
+        pre_options = np.argwhere(self.dice_active[:5] > 0).ravel()
+        if self.dice_active[5] > 0:
+            options = np.concatenate((pre_options,np.arange(50,55)))
+        else:
+            options = pre_options
+        self.yellow_side = np.random.choice([0,1],1)[0] # TODO: Implement fancy algorithm choice nice mega awesome function here
 
     def MarkSheet(self, color=None, value=None, yellow_side=None):
 
         if color is None:
-            color = self.index_choice
+            color = self.choice_option
+        if self.choice_option == 5: #If color is white,
+            color = self.index_choice % 5
+            value = self.dice[5]
+        else:
+            value = self.dice[self.index_choice]
+
         if value is None:
             value = self.choice
         if yellow_side is None:
