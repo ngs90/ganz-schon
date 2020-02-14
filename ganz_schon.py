@@ -37,7 +37,7 @@ class GameSheet(object):
         self.no_fox = 0
         self.plus_ones = 0
         self.rerolls = 0
-
+g
 
         # Dice
         # yellow (0), blue (1), green (2), orange (3), purple (4), white (5)
