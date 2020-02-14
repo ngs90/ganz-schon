@@ -56,7 +56,7 @@ class GameSheet(object):
 #TODO: substitute choicewrap into active and passive roll.
 
     def ChoiceHandler(self):
-
+        self.bonus_choice = None
         self.generatevalidoptions() # need something to map back to choice_option and yellow_side etc.
         self.choice_option = np.random.choice(self.options)  # TODO: Implement fancy algorithm choice nice mega awesome function here
 
