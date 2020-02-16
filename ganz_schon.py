@@ -20,12 +20,14 @@ class GameSheet(object):
         self.blue_option_mapping = np.arange(11, 23).reshape(3, 4)
 
         self.blue[0, 0] = 1
+        self.blue_no = 0 #number of blue crosses
         self.green_pos = - 1 #changed to -1 so position = x means x is last crossed.
         self.green_bounds = np.array([1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6])
         self.orange_pos = - 1
-        self.orange_sum = 0
+        self.orange_points = 0
         self.purple_pos = - 1
-        self.purple_sum = 0
+        self.purple_points = 0
+        self.points = np.zeros(6,dtype=int) # i'th entry gives points for i'th color. i=5 is fox.
         self.purple_last_value = 0
         self.green_orange_purple_bonus = np.array([[ - 1, - 1, - 1, - 1, - 1, 1, 5, - 1, 4, - 1, - 1],
                                                    [ - 1, - 1, - 1, - 1, 0, - 1, - 1,5, - 1, 4, - 1],
@@ -37,8 +39,8 @@ class GameSheet(object):
         self.no_fox = 0
         self.plus_ones = 0
         self.rerolls = 0
-g
-
+        self.green_points = (1+self.green_pos)*(self.green_pos+2)//2
+        self.yellow_score_table = np.array([10,14,16,20])
         # Dice
         # yellow (0), blue (1), green (2), orange (3), purple (4), white (5)
         self.dice = np.zeros(6, dtype=int)
@@ -53,10 +55,11 @@ g
         self.dice[self.dice_active > 0] = np.random.choice(6, np.sum(self.dice_active[self.dice_active > 0])) + 1
         return self.dice
 
+
+
 #TODO: substitute choicewrap into active and passive roll.
 
     def ChoiceHandler(self):
-        self.bonus_choice = None
         self.generatevalidoptions() # need something to map back to choice_option and yellow_side etc.
         self.choice_option = np.random.choice(self.options)  # TODO: Implement fancy algorithm choice nice mega awesome function here
 
@@ -83,7 +86,7 @@ g
             self.options = np.concatenate((pre_options, np.arange(50, 55, dtype = int)))
         else:
             self.options = pre_options
-
+        self.bonus_choice = None
         self.ChoiceHandler()
 
         print('Dice values', self.dice_values, 'options', self.options, 'choice is', self.choice, 'with index', self.index_choice)
@@ -148,6 +151,9 @@ g
             row = index[0]
             col = index[1]
             self.yellow[row:row+1, col:col+1] = 1
+            self.points[0] = (self.yellow_score_table * (self.yellow.sum(axis=0) // 4)).sum()
+            self.points[5] = self.points[:4].min()
+            print(self.yellow)
             self.CheckYellowBonuses(row=row, col=col)
 
         if color == 1: # BLUE
@@ -161,31 +167,39 @@ g
             col = (blue_white_sum - 1) % self.blue.shape[1]
             print('row col', row, col)
             self.blue[row:row+1, col:col+1] = 1
+            self.points[1] += max(self.blue_no,1)
+            self.blue_no+=1
+            self.points[5] = self.points[:4].min()
             print(self.blue)
             self.CheckBlueBonuses(row=row, col=col)
 
         if color == 2: # GREEN
             print('GREEN')
             self.green_pos += 1
+            self.points[2] += self.green_pos + 1
+            self.points[5] = self.points[:4].min()
             self.CheckGreenOrangePurpleBonuses(color, self.green_pos)
 
         if color == 3:  # ORANGE
             self.orange_pos += 1
             if self.orange_pos in [3, 6, 8]:
-                self.orange_sum += 2*value
+                self.points[3] += 2*value
             elif self.orange_pos == 10:
-                self.orange_sum += 3*value
+                self.points[3] += 3*value
             else:
-                self.orange_sum += value
+                self.points[3] += value
+            self.points[5] = self.points[:4].min()
             self.CheckGreenOrangePurpleBonuses(color, self.orange_pos)
 
         if color == 4:  # purple
             self.purple_pos += 1
-            self.purple_sum += value
+            self.points[4] += value
             if value == 6:
                 self.purple_last_value = 0
             else:
                 self.purple_last_value = value
+            self.points[5] = self.points[:4].min()
+
             self.CheckGreenOrangePurpleBonuses(color, self.purple_pos)
 
 
@@ -411,6 +425,8 @@ if __name__ == '__main__':
         if np.any(gs.dice_active > 0):
             gs.ActiveRoll()
             gs.MarkSheet()
+            print("print points",gs.points)
+
     gs.dice_active = np.ones(6, dtype=int) #reset, all dice in play again.
 
     print('#'*50)
